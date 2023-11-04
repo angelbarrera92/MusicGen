@@ -12,3 +12,8 @@ https://ai.honu.io/papers/musicgen/
 
 ## Paper
 https://arxiv.org/abs/2306.05284
+
+
+# ENV Variables
+
+`AUDIOCRAFT_CACHE_DIR`: Set the cache to gdrive so it doesn't fill up the colab disk and the boot up time is faster.
