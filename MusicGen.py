@@ -24,12 +24,14 @@ from audiocraft.data.audio_utils import convert_audio
 from audiocraft.data.audio import audio_write
 from audiocraft.models import MusicGen, MultiBandDiffusion
 
+MAX_DURATION = 200
+
 
 MODEL = None  # Last used model
 IS_BATCHED = "facebook/MusicGen" in os.environ.get('SPACE_ID', '')
 print(IS_BATCHED)
-MAX_BATCH_SIZE = 12
-BATCHED_DURATION = 15
+MAX_BATCH_SIZE = 24
+BATCHED_DURATION = 30
 INTERRUPTING = False
 MBD = None
 # We have to wrap subprocess call to clean a bit the log when using gr.make_waveform
@@ -82,6 +84,7 @@ def load_model(version='facebook/musicgen-melody'):
     print("Loading model", version)
     if MODEL is None or MODEL.name != version:
         MODEL = MusicGen.get_pretrained(version)
+        MODEL.max_duration = MAX_DURATION
 
 
 def load_diffusion():
@@ -92,7 +95,7 @@ def load_diffusion():
 
 
 def _do_predictions(texts, melodies, duration, progress=False, **gen_kwargs):
-    MODEL.set_generation_params(duration=duration, **gen_kwargs)
+    MODEL.set_generation_params(duration=duration, extend_stride=30, **gen_kwargs)
     print("new batch", len(texts), texts, [None if m is None else (m[0], m[1].shape) for m in melodies])
     be = time.time()
     processed_melodies = []
@@ -222,7 +225,7 @@ def ui_full(launch_kwargs):
                     decoder = gr.Radio(["Default", "MultiBand_Diffusion"],
                                        label="Decoder", value="Default", interactive=True)
                 with gr.Row():
-                    duration = gr.Slider(minimum=1, maximum=3600, value=10, label="Duration", interactive=True)
+                    duration = gr.Slider(minimum=1, maximum=MAX_DURATION, value=10, label="Duration", interactive=True)
                 with gr.Row():
                     topk = gr.Number(label="Top-k", value=250, interactive=True)
                     topp = gr.Number(label="Top-p", value=0, interactive=True)
